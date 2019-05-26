@@ -1,0 +1,89 @@
+---
+title: "Problem Set 1 ECO375"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+Install and load required R packages.
+```{r}
+chooseCRANmirror(graphics=FALSE, ind=33)
+library(car)
+```
+
+Load data.
+```{r}
+dataset <- read.table(file="C:\\Users\\Fatema\\Documents\\Third Year\\ECO375\\Problem Set 1\\wage2.txt", header=TRUE, sep=",")
+```
+
+List names of the data variables.
+```{r}
+names(dataset)
+```
+
+Keep data on wage, education, experience, IQ, and age.
+```{r}
+dataset <- subset(dataset, select = c("wage", "IQ", "educ", "exper", "age"))
+```
+
+Find average wage, education, work experience, and IQ in the sample. 
+```{r}
+summary(dataset)
+```
+Therefore, average wage is 957.9; average IQ is 101.3; average education is 13.47; average age is 33.08 in the sample.
+
+What is the sample standard deviation of IQ in the sample?
+```{r}
+sd(dataset$IQ)
+```
+
+How many individuals in the sample have exactly 12 years of education?
+```{r}
+sum(dataset$educ==12)
+```
+There are 393 people with 12 years of education.
+
+What is the maximum level of education anyone has in the sample?
+From above, the maximum education level is 18 years. 
+
+Run the regression equation and provide the output.
+```{r}
+Regression <- lm(formula = log(wage) ~ IQ + educ + exper + age, data = dataset)
+summary(Regression)
+```
+
+```{r}
+coeffs = coefficients(Regression)
+coeffs
+```
+
+What is the estimated percentage increase in wage if education is increased by one year, holding the other factors constant?
+```{r}
+educinc <- 100*coeffs[3]
+educinc
+```
+Wage will increase by approximately 5.1%.
+
+What is the estimated percentage increase in wage if education is increased by one year and experience is decreased by one year, holding the other factors constant?
+```{r}
+increase = 100*coeffs[3] - 100*coeffs[4]
+increase
+```
+Wage will increase by 3.78%
+
+Your friend has 12 years of education, 10 years of work experience, an IQ of 100, and is 28 years old. Find his/her predicted ln(wage).
+```{r}
+prediction = coeffs[1] + coeffs[2]*100 + coeffs[3]*12 + coeffs[4]*10 + coeffs[5]*28
+prediction
+```
+Her predicted ln(wage) is 6.602511.
+
+What percentage of the variation in ln(wage) is explained by the four covariates?
+That is the value of R^2 we see in h the regression ouput ie. 17%
+
+Test the null hypothesis that education and experience has no e¤ect on ln(wage), using a 5% signifcance level.
+```{r}
+linearHypothesis(Regression, c("educ=0", "exper=0"))
+```
+We fail to reject that education and experience has no effect on ln(wage). 
+
