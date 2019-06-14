@@ -1,0 +1,71 @@
+---
+title: "R Notebook"
+output:
+  html_notebook: default
+  pdf_document: default
+---
+Install and load required R packages
+```{r}
+chooseCRANmirror(graphics=FALSE, ind=33)
+library(lmtest)
+library(plm)
+library(AER)
+```
+
+Load Data
+```{r}
+dataset <- read.csv(file='hprice3.txt',header=TRUE, sep=",")
+head(dataset)
+```
+
+Use OLS to estimate the model and output your estimates and the usual standard errors.
+```{r}
+MultipleRegression <- lm(formula = lprice ~ year + age + agesq + nbh + cbd + inst + rooms + area + land + baths + dist, data=dataset)
+summary(MultipleRegression)
+```
+
+Report the outcome of the Breusch-Pagan test for heteroskedasticity and comment on heteroskedasticity being present or absent.
+```{r}
+bptest(MultipleRegression)
+```
+We reject the null that the variance of the residuals is constant based on a 5% significance level, thus hetroskedacity is present.
+
+Obtain the heteroskedasticity-robust standard errors. Report any important differences with the usual standard errors.
+```{r}
+coeftest(MultipleRegression, vcov = vcovHC(MultipleRegression, type = "HC0"))
+```
+The standard errors are very small in both cases. But when we compare p-values, we realize that land size is no longer significant due to extra noise.
+
+Estimate the model using Generalized Least Squares (GLS), using the usual exponential function for h(x); and report the output.
+```{r}
+ln_uhat2 <- log(MultipleRegression$residuals^2)
+MRhet <- lm(formula = ln_uhat2 ~ year + age + agesq + nbh + cbd + inst + rooms + area + land + baths + dist, data=dataset)
+hhat <- exp(MRhet$fitted.values)
+p <- 1/hhat
+GLS <- lm(formula = lprice ~ year + age + agesq + nbh + cbd + inst + rooms + area + land + baths + dist, weights = p, data=dataset)
+summary(GLS)
+```
+
+Load Data
+```{r}
+dataset <- read.csv(file='hsng2.txt',header=TRUE, sep=",")
+head(dataset)
+```
+
+Use OLS to estimate this equation and output your estimates.
+```{r}
+MR <- lm(formula = rent ~ hsngval + pcturban, data = dataset)
+summary(MR)
+```
+
+Estimate the model with 2SLS, instrumenting hsngval with faminc (median family income in the city) and popden (population density in the city), assuming these instruments are exogenous in the rent equation.
+```{r}
+TSLS <- ivreg(formula = rent ~ hsngval + pcturban | faminc + popden + pcturban, data = dataset)
+summary(TSLS, diagnostics = TRUE)
+```
+
+Test for weak instruments, regressor exogeneity, and overidentifying restrictions. State your conclusions.
+
+We reject the null that the instruments are weak.
+We reject the null in the Wu-Hausman test therefore we can use 2SLS instead of OLS
+We fail to reject the null in the Sargan test that instruments are exogenous so we know that the instruments are valid. 
